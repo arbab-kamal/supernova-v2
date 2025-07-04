@@ -186,12 +186,12 @@ const DocumentListPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-200">
+    <div className="min-h-screen" style={{ backgroundColor: '#ECF9F2' }}>
+      <header className="border-b" style={{ borderColor: '#E5E7EB' }}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center mb-4">
             <Link href={"/chat"}>
-              <button className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+              <button className="flex items-center text-gray-600 hover:transition-colors" style={{ color: '#6B7280' }} onMouseEnter={(e) => e.target.style.color = '#5CAB7D'} onMouseLeave={(e) => e.target.style.color = '#6B7280'}>
                 <ArrowLeft className="h-5 w-5 mr-2" />
                 <span>Return to Chat</span>
               </button>
@@ -210,7 +210,10 @@ const DocumentListPage = () => {
               {selectedDocs.size > 0 && (
                 <button
                   onClick={deleteSelectedFiles}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center space-x-2"
+                  className="px-4 py-2 text-white rounded-lg hover:opacity-90 flex items-center space-x-2"
+                  style={{ backgroundColor: '#5CAB7D' }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#3D8C5F'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#5CAB7D'}
                 >
                   <Trash2 className="h-4 w-4" />
                   <span>Delete Selected</span>
@@ -222,7 +225,14 @@ const DocumentListPage = () => {
                 <input
                   type="text"
                   placeholder="Search documents..."
-                  className="pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                  style={{ 
+                    '--tw-ring-color': '#5CAB7D',
+                    '--tw-ring-opacity': '0.5',
+                    borderColor: '#E5E7EB'
+                  } as any}
+                  onFocus={(e) => e.target.style.borderColor = '#5CAB7D'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
                 />
               </div>
             </div>
@@ -232,7 +242,7 @@ const DocumentListPage = () => {
 
       <main className="container mx-auto px-4 py-6">
         {!selectedProject && (
-          <div className="mb-4 p-4 bg-yellow-100 text-yellow-700 rounded-lg">
+          <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: '#A8E6C3', color: '#2A6A45' }}>
             No project selected. Please select a project to view documents.
           </div>
         )}
@@ -264,16 +274,16 @@ const DocumentListPage = () => {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-gray-50 hover:bg-gray-50">
+                      <TableRow className="hover:bg-gray-50" style={{ backgroundColor: '#F3F4F6' }}>
                         <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           <div className="flex items-center">
                             <button
                               onClick={toggleAll}
-                              className="mr-3 focus:outline-none"
+                              className="mr-3 focus:outline-none hover:opacity-70"
                               disabled={documents.length === 0}
                             >
                               {selectedDocs.size === documents.length && documents.length > 0 ? (
-                                <CheckSquare className="h-4 w-4 text-blue-500" />
+                                <CheckSquare className="h-4 w-4" style={{ color: '#5CAB7D' }} />
                               ) : (
                                 <Square className="h-4 w-4 text-gray-400" />
                               )}
@@ -306,7 +316,7 @@ const DocumentListPage = () => {
                                   className="mr-3 focus:outline-none"
                                 >
                                   {selectedDocs.has(doc.id) ? (
-                                    <CheckSquare className="h-4 w-4 text-blue-500" />
+                                    <CheckSquare className="h-4 w-4" style={{ color: '#5CAB7D' }} />
                                   ) : (
                                     <Square className="h-4 w-4 text-gray-400" />
                                   )}

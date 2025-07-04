@@ -281,7 +281,7 @@ const MultiplePDFUploader = ({ onUploadComplete, projectName: propProjectName })
     <div className="relative">
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center space-x-2">
+          <Button className="px-4 py-2 bg-[#2A6A45] text-white rounded-lg hover:bg-[#2A6A45] flex items-center space-x-2">
             <Upload className="w-4 h-4" />
             <span>Upload PDFs to {getProjectName()}</span>
           </Button>
@@ -303,10 +303,10 @@ const MultiplePDFUploader = ({ onUploadComplete, projectName: propProjectName })
               aria-label="PDF files input"
             />
             <div
-              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition ${
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition bg-white ${
                 isDragging
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 hover:border-blue-500 hover:bg-blue-50"
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-300 hover:border-green-500 hover:bg-green-50"
               }`}
               onClick={() => fileInputRef.current?.click()}
               onDrop={handleDrop}
@@ -318,7 +318,7 @@ const MultiplePDFUploader = ({ onUploadComplete, projectName: propProjectName })
                 e.key === "Enter" && fileInputRef.current?.click()
               }
             >
-              <Upload className="mx-auto h-10 w-10 mb-4 text-blue-500" />
+              <Upload className="mx-auto h-10 w-10 mb-4 text-green-500" />
               <p className="text-sm text-gray-600">
                 {isDragging
                   ? "Drop files here"
