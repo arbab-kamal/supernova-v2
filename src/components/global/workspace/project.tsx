@@ -90,7 +90,7 @@ const ProjectDashboard = () => {
     <div className="p-6" style={{ backgroundColor: colorTheme.white }}>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-semibold" style={{ color: colorTheme.gray800 }}>
-          Project
+          Workspace
         </h1>
         <Button
           onClick={() => setIsCreateOpen(true)}
@@ -107,12 +107,12 @@ const ProjectDashboard = () => {
             e.target.style.backgroundColor = colorTheme.primary;
           }}
         >
-          + Create New Project
+          + Create New Workspace
         </Button>
       </div>
 
       <h2 className="text-sm mb-4" style={{ color: colorTheme.gray600 }}>
-        All Projects
+        All Workspaces
       </h2>
 
       {loading ? (
@@ -120,14 +120,14 @@ const ProjectDashboard = () => {
           className="text-center py-12 text-lg" 
           style={{ color: colorTheme.gray500 }}
         >
-          Loading projects...
+          Loading workspaces...
         </div>
       ) : localProjects.length === 0 ? (
         <div 
           className="text-center py-12" 
           style={{ color: colorTheme.gray500 }}
         >
-          No projects found. Create your first project to get started.
+          No workspaces found. Create your first workspace to get started.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

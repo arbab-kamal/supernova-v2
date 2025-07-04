@@ -202,10 +202,10 @@ const syncWithBackend = async () => {
 
   const navItems = [
     {
-      id: "project",
+      id: "workspace",
       icon: FolderGit2,
-      label: "Project",
-      href: "/project",
+      label: "Workspace",
+      href: "/workspace",
     },
     {
       id: "Shared Notes",
@@ -443,10 +443,10 @@ const syncWithBackend = async () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-48 bg-white text-gray-800 rounded-lg shadow-md mt-2">
             <DropdownMenuItem>
-              <Link href="/chat/account" className="flex items-center gap-2">
+              {/* <Link href="/chat/account" className="flex items-center gap-2">
                 <User className="w-4 h-4 text-gray-600" />
                 <span>Account</span>
-              </Link>
+              </Link> */}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="w-4 h-4 text-red-500" />

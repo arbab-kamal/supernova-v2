@@ -83,19 +83,19 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         {/* Body */}
         {onCreateProject ? (
           <div className="space-y-4">
-            <label className="block text-sm font-medium mb-1">Project Title</label>
+            <label className="block text-sm font-medium mb-1">Workspace Title</label>
             <input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleChange}
               className="w-full p-2 border rounded-md"
-              placeholder="Enter project title"
+              placeholder="Enter workspace title"
             />
           </div>
         ) : (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">Select a project to save to:</p>
+            <p className="text-sm text-gray-600">Select a workspace to save to:</p>
             <div className="max-h-60 overflow-y-auto space-y-2">
               {projects?.map((p) => (
                 <div
@@ -120,7 +120,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             className="bg-[#FFFFFF] hover:bg-[#7DCCA0] text-black hover:text-white transition-colors"
             onClick={handleSave}
           >
-            {onCreateProject ? "Create Project" : "Save"}
+            {onCreateProject ? "Create Workspace" : "Save"}
           </Button>
         </div>
       </div>

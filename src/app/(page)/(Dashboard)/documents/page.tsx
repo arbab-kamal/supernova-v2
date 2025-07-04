@@ -14,7 +14,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { selectCurrentProject } from "@/store/projectSlice";
 import MultiplePDFUploader from "@/components/global/sidebar/pdfuploader";
-import ProjectHeader from "@/components/global/project/projecttitle";
+import ProjectHeader from "@/components/global/workspace/projecttitle";
 
 // Shadcn UI Table Components
 import {
