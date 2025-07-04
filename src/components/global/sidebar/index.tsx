@@ -334,7 +334,7 @@ const syncWithBackend = async () => {
         <div>
           <button className="flex items-center justify-between w-full mb-2 p-2 rounded-md hover:bg-white/10 transition-colors">
             <div className="flex items-center gap-2">
-              <BarChart className="w-4 h-4" />
+              <MessageCircle className="w-4 h-4" />
               <span className="font-medium">Chat</span>
             </div>
             <div className="flex items-center gap-1">
@@ -442,12 +442,12 @@ const syncWithBackend = async () => {
             <ChevronDown className="w-4 h-4 text-white" />
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-48 bg-white text-gray-800 rounded-lg shadow-md mt-2">
-            <DropdownMenuItem>
-              {/* <Link href="/chat/account" className="flex items-center gap-2">
+            {/* <DropdownMenuItem>
+              <Link href="/chat/account" className="flex items-center gap-2">
                 <User className="w-4 h-4 text-gray-600" />
                 <span>Account</span>
-              </Link> */}
-            </DropdownMenuItem>
+              </Link>
+            </DropdownMenuItem> */}
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="w-4 h-4 text-red-500" />
               <span>Logout</span>

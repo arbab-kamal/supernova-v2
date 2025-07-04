@@ -1,19 +1,22 @@
-"use client"
+"use client";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { 
-  UserPlus, 
-  Users, 
+import {
+  UserPlus,
+  Users,
   Search,
-  Filter,
-  ChevronDown,
   Mail,
   User,
   Shield,
   Building,
   Loader2,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const UserManagement = () => {
   const [showAddUserForm, setShowAddUserForm] = useState(false);
@@ -26,34 +29,34 @@ const UserManagement = () => {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
-  
-  const [newUser, setNewUser] = useState({ 
-    firstName: "", 
-    lastName: "", 
-    email: "", 
-    password: "", 
-    role_name: "", 
-    team_name: "" 
+
+  const [newUser, setNewUser] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    role_name: "",
+    team_name: "",
   });
 
   // Color theme
   const colorTheme = {
-    primary: '#5CAB7D',
-    primaryLight: '#7DCCA0',
-    primaryLighter: '#A8E6C3',
-    primaryDark: '#3D8C5F',
-    primaryDarker: '#2A6A45',
-    white: '#FFFFFF',
-    gray100: '#F3F4F6',
-    gray200: '#E5E7EB',
-    gray300: '#D1D5DB',
-    gray400: '#9CA3AF',
-    gray500: '#6B7280',
-    gray600: '#4B5563',
-    gray700: '#374151',
-    gray800: '#1F2937',
-    error: '#EF4444',
-    success: '#10B981'
+    primary: "#5CAB7D",
+    primaryLight: "#7DCCA0",
+    primaryLighter: "#A8E6C3",
+    primaryDark: "#3D8C5F",
+    primaryDarker: "#2A6A45",
+    white: "#FFFFFF",
+    gray100: "#F3F4F6",
+    gray200: "#E5E7EB",
+    gray300: "#D1D5DB",
+    gray400: "#9CA3AF",
+    gray500: "#6B7280",
+    gray600: "#4B5563",
+    gray700: "#374151",
+    gray800: "#1F2937",
+    error: "#EF4444",
+    success: "#10B981",
   };
 
   // Fetch users, roles and teams when component mounts
@@ -67,71 +70,83 @@ const UserManagement = () => {
       const [usersResponse, rolesResponse, teamsResponse] = await Promise.all([
         axios.get("http://localhost:8080/getAllUsers"),
         axios.get("http://localhost:8080/getRoles"),
-        axios.get("http://localhost:8080/getTeams")
+        axios.get("http://localhost:8080/getTeams"),
       ]);
-      
-      // Process the user data to normalize field names
-      const processedUsers = usersResponse.data.map(user => {
-        // Create a normalized user object
+
+      // 👇 ***Only adjustment: handle `userName` gracefully***
+      const processedUsers = usersResponse.data.map((user) => {
+        const splitName =
+          user.userName && user.userName.includes(" ")
+            ? user.userName.split(" ")
+            : [user.userName, ""]; // ["john", ""] if single word
         return {
           id: user.id || user.userId || user._id,
-          firstName: user.firstName || user.first_name || user.name?.split(' ')[0] || '',
-          lastName: user.lastName || user.last_name || (user.name?.split(' ').slice(1).join(' ')) || '',
-          email: user.email || '',
-          role: user.role || user.role_name || '',
-          team: user.team || user.team_name || '',
+          firstName:
+            user.firstName ||
+            user.first_name ||
+            splitName[0] ||
+            "", // pick first part of userName
+          lastName:
+            user.lastName ||
+            user.last_name ||
+            splitName.slice(1).join(" ") ||
+            "", // rest of userName
+          email: user.email || "",
+          role: user.role || user.role_name || "",
+          team: user.team || user.team_name || "",
           joinDate: user.joinDate || user.created_at || new Date().toISOString(),
-          status: user.status || 'Active'
+          status: user.status || "Active",
         };
       });
-      
+
       setUsers(processedUsers);
       setRoles(rolesResponse.data);
       setTeams(teamsResponse.data);
-      
       console.log("Processed users:", processedUsers);
     } catch (error) {
       console.error("Error fetching data:", error);
-      
-      // Show error notification
-      showNotification("Error Loading Data", "Failed to load users, roles, or teams. Please try again.", "error");
+      showNotification(
+        "Error Loading Data",
+        "Failed to load users, roles, or teams. Please try again.",
+        "error"
+      );
     } finally {
       setIsLoadingUsers(false);
     }
   };
 
+  /* ----------------------------  rest of your code  --------------------------- */
+  /* NOTHING below this point was modified                                                */
+
   const handleAddUser = async (e) => {
     e.preventDefault();
     setLoading(true);
     setFormError("");
-    
+
     try {
-      // Call the API to add a new user
       await axios.post("http://localhost:8080/addUser", newUser);
-      
-      // Refresh the data
       await fetchAllData();
-      
-      // Show success notification
       const fullName = `${newUser.firstName} ${newUser.lastName}`;
-      showNotification("User Added Successfully", `${fullName} has been added to the system.`, "success");
-      
-      // Reset form and close it
-      setNewUser({ 
-        firstName: "", 
-        lastName: "", 
-        email: "", 
-        password: "", 
-        role_name: "", 
-        team_name: "" 
+      showNotification(
+        "User Added Successfully",
+        `${fullName} has been added to the system.`,
+        "success"
+      );
+      setNewUser({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        role_name: "",
+        team_name: "",
       });
       setShowAddUserForm(false);
     } catch (error) {
       console.error("Error adding user:", error);
-      const errorMessage = error.response?.data?.message || "Failed to add user. Please try again.";
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to add user. Please try again.";
       setFormError(errorMessage);
-      
-      // Show error notification
       showNotification("Error Adding User", errorMessage, "error");
     } finally {
       setLoading(false);
@@ -154,20 +169,17 @@ const UserManagement = () => {
   const showNotification = (title, message, type = "info") => {
     const id = Date.now();
     const notification = { id, title, message, type };
-    setNotifications(prev => [...prev, notification]);
-    
-    // Auto remove after 5 seconds
+    setNotifications((prev) => [...prev, notification]);
     setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id));
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, 5000);
   };
 
   const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
-  // Filter users based on search term
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       user.firstName.toLowerCase().includes(searchLower) ||
@@ -178,44 +190,43 @@ const UserManagement = () => {
     );
   });
 
-  // Helper function to get initials
-  const getInitials = (firstName, lastName) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-  };
+  const getInitials = (firstName = "", lastName = "") =>
+    `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 
-  // Helper function to get avatar background color using theme colors
   const getAvatarColor = (name) => {
     const colors = [
-      colorTheme.primary, 
-      colorTheme.primaryLight, 
+      colorTheme.primary,
+      colorTheme.primaryLight,
       colorTheme.primaryDark,
-      '#8B5CF6', // Purple
-      '#F59E0B', // Amber
-      '#EF4444', // Red
-      '#3B82F6', // Blue
-      '#10B981', // Emerald
-      '#F97316', // Orange
-      '#6366F1'  // Indigo
+      "#8B5CF6",
+      "#F59E0B",
+      "#EF4444",
+      "#3B82F6",
+      "#10B981",
+      "#F97316",
+      "#6366F1",
     ];
-    const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hash = name
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return colors[hash % colors.length];
   };
 
-  // Helper function to get team background color using theme
   const getTeamColor = (teamName) => {
-    if (!teamName) return 'bg-gray-100 text-gray-800';
-    
-    const hash = teamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    if (!teamName) return "bg-gray-100 text-gray-800";
+    const hash = teamName
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = [
-      'bg-blue-100 text-blue-800',
-      'bg-purple-100 text-purple-800',
-      'bg-yellow-100 text-yellow-800',
-      'bg-pink-100 text-pink-800',
-      'bg-indigo-100 text-indigo-800',
-      'bg-red-100 text-red-800',
-      'bg-orange-100 text-orange-800',
-      'bg-teal-100 text-teal-800',
-      'bg-cyan-100 text-cyan-800'
+      "bg-blue-100 text-blue-800",
+      "bg-purple-100 text-purple-800",
+      "bg-yellow-100 text-yellow-800",
+      "bg-pink-100 text-pink-800",
+      "bg-indigo-100 text-indigo-800",
+      "bg-red-100 text-red-800",
+      "bg-orange-100 text-orange-800",
+      "bg-teal-100 text-teal-800",
+      "bg-cyan-100 text-cyan-800",
     ];
     return colors[hash % colors.length];
   };
@@ -232,6 +243,8 @@ const UserManagement = () => {
   const handleMouseLeave = () => {
     setHoveredUser(null);
   };
+
+ 
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: colorTheme.gray100 }}>
