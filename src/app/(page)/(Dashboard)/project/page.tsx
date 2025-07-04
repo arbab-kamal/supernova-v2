@@ -1,11 +1,7 @@
-import React from 'react'
+import ProjectDashboard from "@/components/global/project/project";
 
-type Props = {}
+const Project = () => {
+  return <ProjectDashboard />;
+};
 
-const Project = (props: Props) => {
-  return (
-    <div>Project</div>
-  )
-}
-
-export default Project
+export default Project;
