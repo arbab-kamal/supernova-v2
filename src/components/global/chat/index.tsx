@@ -1,174 +1,249 @@
 "use client";
-import React, { useState, useRef, useEffect, useCallback, FormEvent } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Mail } from "lucide-react";
 import Typewriter from "./typewriter";
 import WelcomeUser from "./Welcome";
+import { useTheme } from "next-themes";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentProject } from "@/store/projectSlice";
 import { selectChatId, selectResetFlag } from "@/store/chatSlice";
-import { selectHistoryLoading, clearHistory } from "@/store/historySlice";
+import { 
+  selectChatHistory, 
+  selectHistoryLoading,
+  selectConversationMessages,
+  selectHasFetchedHistory,
+  clearHistory,
+  fetchChatHistory,
+} from "@/store/historySlice";
 import { useLanguage } from "@/providers/language-providers";
 
-/* ─── pastel‑green palette ─── */
+// Updated color theme with pastel green palette
 const colorTheme = {
   primary: "#5CAB7D",
   primaryLight: "#7DCCA0",
   primaryLighter: "#A8E6C3",
-  primarySoft: "#ECF9F2",
+  primarySoft: "#FFFFFF",
   primaryDark: "#3D8C5F",
   primaryDarker: "#2A6A45",
-  white: "#FFFFFF",
+  white: "#ECF9F2", // Changed from white to soft green
   gray100: "#F3F4F6",
   gray200: "#E5E7EB",
   gray400: "#9CA3AF",
   gray500: "#6B7280",
 };
 
-/* ─── types ─── */
-interface Message {
-  text: string;
-  sender: "user" | "ai";
-}
-interface EmailModalProps {
-  messageContent: string;
-  onClose: () => void;
-}
+// Updated theme colors function
+const getThemeColors = (isDarkMode) => {
+  if (isDarkMode) {
+    return {
+      bg: {
+        main: "#1F2937",
+        secondary: "#374151",
+        tertiary: "#4B5563",
+      },
+      text: {
+        primary: "#F9FAFB",
+        secondary: "#D1D5DB",
+      },
+      primary: {
+        main: colorTheme.primary,
+        light: colorTheme.primaryLight,
+        dark: colorTheme.primaryDark,
+      },
+      input: {
+        bg: "#374151",
+        border: "#4B5563",
+      },
+      border: "#4B5563",
+    };
+  } else {
+    return {
+      bg: {
+        main: colorTheme.primarySoft,
+        secondary: colorTheme.gray100,
+        tertiary: colorTheme.primarySoft,
+      },
+      text: {
+        primary: "#1F2937",
+        secondary: colorTheme.gray500,
+      },
+      primary: {
+        main: colorTheme.primary,
+        light: colorTheme.primaryLight,
+        dark: colorTheme.primaryDark,
+      },
+      input: {
+        bg: colorTheme.white, // Now uses soft green
+        border: colorTheme.gray200,
+      },
+      border: colorTheme.gray200,
+    };
+  }
+};
 
-/* ───────────────── Email Modal ───────────────── */
-const EmailModal = ({ messageContent, onClose }: EmailModalProps) => {
+// Email Modal Component
+const EmailModal = ({ messageContent, onClose, colors, isDarkMode }) => {
   const [emailId, setEmailId] = useState("");
   const [subject, setSubject] = useState("AI Chat Message");
   const [body, setBody] = useState(messageContent);
-  const [sending, setSending] = useState(false);
-  const [status, setStatus] = useState<{ ok: boolean; msg: string } | null>(
-    null
-  );
-
-  const handleSubmit = async (e: FormEvent) => {
+  const [isSending, setIsSending] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSending(true);
+    setIsSending(true);
+    
     try {
-      const base =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
-      await axios.post(`${base}/send-email`, null, {
-        params: { emailId, subject, body },
+      const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
+      const response = await axios.post(`${baseURL}/send-email`, null, {
+        params: {
+          emailId,
+          subject,
+          body
+        }
       });
-      setStatus({ ok: true, msg: "Email sent successfully!" });
-      setTimeout(onClose, 2000);
-    } catch {
-      setStatus({ ok: false, msg: "Failed to send email. Please try again." });
+      
+      setSendResult({ success: true, message: "Email sent successfully!" });
+      
+      // Auto close after success
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+      
+    } catch (error) {
+      console.error("Error sending email:", error);
+      setSendResult({ success: false, message: "Failed to send email. Please try again." });
     } finally {
-      setSending(false);
+      setIsSending(false);
     }
   };
-
+  
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 backdrop-blur-sm"
-        style={{ background: "rgba(255,255,255,0.6)" }}
-        onClick={onClose}
-      />
-      <div
-        className="relative w-full max-w-md p-6 rounded-lg shadow-lg"
-        style={{ background: colorTheme.primarySoft }}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div 
+        className="rounded-lg shadow-lg p-6 w-full max-w-md"
+        style={{ backgroundColor: colors.bg.main }}
       >
-        <h3
+        <h3 
           className="text-lg font-medium mb-4"
-          style={{ color: colorTheme.primaryDark }}
+          style={{ color: colors.text.primary }}
         >
-          Send message as email
+          Send Message as Email
         </h3>
-
-        {status && (
-          <p
-            className={`mb-4 p-2 rounded ${
-              status.ok
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
+        
+        {sendResult && (
+          <div 
+            className={`p-3 mb-4 rounded-md ${sendResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
           >
-            {status.msg}
-          </p>
+            {sendResult.message}
+          </div>
         )}
-
+        
         <form onSubmit={handleSubmit}>
-          <label
-            className="block text-sm mb-1"
-            style={{ color: colorTheme.gray500 }}
-          >
-            To
-          </label>
-          <input
-            className="w-full mb-3 px-3 py-2 border rounded"
-            style={{
-              background: colorTheme.white,
-              borderColor: colorTheme.gray200,
-              color: colorTheme.primaryDarker,
-            }}
-            type="email"
-            required
-            value={emailId}
-            onChange={(e) => setEmailId(e.target.value)}
-          />
-          <label
-            className="block text-sm mb-1"
-            style={{ color: colorTheme.gray500 }}
-          >
-            Subject
-          </label>
-          <input
-            className="w-full mb-3 px-3 py-2 border rounded"
-            style={{
-              background: colorTheme.white,
-              borderColor: colorTheme.gray200,
-              color: colorTheme.primaryDarker,
-            }}
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-          />
-          <label
-            className="block text-sm mb-1"
-            style={{ color: colorTheme.gray500 }}
-          >
-            Message
-          </label>
-          <textarea
-            rows={5}
-            className="w-full mb-4 px-3 py-2 border rounded"
-            style={{
-              background: colorTheme.white,
-              borderColor: colorTheme.gray200,
-              color: colorTheme.primaryDarker,
-            }}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-          />
-
-          <div className="flex justify-end gap-3">
+          <div className="mb-4">
+            <label 
+              htmlFor="emailId" 
+              className="block mb-2 text-sm font-medium"
+              style={{ color: colors.text.secondary }}
+            >
+              Recipient Email
+            </label>
+            <input
+              id="emailId"
+              type="email"
+              value={emailId}
+              onChange={(e) => setEmailId(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2"
+              style={{ 
+                backgroundColor: colors.input.bg,
+                borderColor: colors.input.border,
+                color: colors.text.primary,
+                focusRingColor: colorTheme.primary
+              }}
+              required
+            />
+          </div>
+          
+          <div className="mb-4">
+            <label 
+              htmlFor="subject" 
+              className="block mb-2 text-sm font-medium"
+              style={{ color: colors.text.secondary }}
+            >
+              Subject
+            </label>
+            <input
+              id="subject"
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2"
+              style={{ 
+                backgroundColor: colors.input.bg,
+                borderColor: colors.input.border,
+                color: colors.text.primary
+              }}
+              required
+            />
+          </div>
+          
+          <div className="mb-4">
+            <label 
+              htmlFor="body" 
+              className="block mb-2 text-sm font-medium"
+              style={{ color: colors.text.secondary }}
+            >
+              Message
+            </label>
+            <textarea
+              id="body"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={5}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2"
+              style={{ 
+                backgroundColor: colors.input.bg,
+                borderColor: colors.input.border,
+                color: colors.text.primary
+              }}
+              required
+            />
+          </div>
+          
+          <div className="flex justify-end space-x-3">
             <button
               type="button"
               onClick={onClose}
-              disabled={sending}
-              className="px-4 py-2 border rounded"
-              style={{
-                borderColor: colorTheme.gray200,
-                color: colorTheme.primaryDarker,
+              className="px-4 py-2 border rounded-md hover:bg-opacity-80 transition-colors"
+              style={{ 
+                backgroundColor: colorTheme.white,
+                borderColor: colors.border,
+                color: colors.text.primary
               }}
+              disabled={isSending}
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={sending}
-              className="px-4 py-2 text-white rounded"
-              style={{ background: colorTheme.primary }}
+              className="px-4 py-2 rounded-md hover:opacity-90 transition-opacity"
+              style={{ 
+                backgroundColor: colorTheme.primary,
+                color: colorTheme.white
+              }}
+              disabled={isSending}
             >
-              {sending ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              {isSending ? (
+                <div 
+                  className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mx-auto"
+                  style={{ 
+                    borderColor: colorTheme.white,
+                    borderTopColor: 'transparent'
+                  }}
+                ></div>
               ) : (
-                "Send"
+                'Send Email'
               )}
             </button>
           </div>
@@ -178,202 +253,407 @@ const EmailModal = ({ messageContent, onClose }: EmailModalProps) => {
   );
 };
 
-/* ───────────────── Chatbox ───────────────── */
 const Chatbox = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
-  const [emailOpen, setEmailOpen] = useState(false);
-  const [emailText, setEmailText] = useState("");
-
-  const { language } = useLanguage();
-
+  const [messages, setMessages] = useState([]);
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [userInitial, setUserInitial] = useState("");
+  const [hoveredMessageIndex, setHoveredMessageIndex] = useState(null);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [selectedMessageContent, setSelectedMessageContent] = useState("");
+  
+  const { theme } = useTheme();
+  const isDarkMode = theme === "dark";
+  const colors = getThemeColors(isDarkMode);
+  
+  // Redux state
   const dispatch = useDispatch();
   const chatId = useSelector(selectChatId);
   const resetFlag = useSelector(selectResetFlag);
-  const project = useSelector(selectCurrentProject);
+  const selectedProject = useSelector(selectCurrentProject);
+  const chatHistory = useSelector(selectChatHistory);
   const historyLoading = useSelector(selectHistoryLoading);
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const projectName = useCallback((): string => {
-    if (typeof project === "string" && project.trim()) return project.trim();
-    if (project && typeof project === "object") {
-      return (
-        project.name || project.title || project.projectTitle || "default"
-      ).toString();
+  const conversationMessages = useSelector(selectConversationMessages);
+  const hasFetchedHistory = useSelector(selectHasFetchedHistory);
+  const messagesEndRef = useRef(null);
+  const { language } = useLanguage();
+  
+  // Function to get project name - robust method to handle different formats
+  const getProjectName = useCallback(() => {
+    // Handle string case
+    if (typeof selectedProject === "string" && selectedProject.trim() !== "") {
+      console.log("Using project name from Redux (string):", selectedProject);
+      return selectedProject.trim();
     }
+    
+    // Handle object with name property
+    if (
+      typeof selectedProject === "object" && 
+      selectedProject !== null &&
+      selectedProject.name && 
+      typeof selectedProject.name === "string" && 
+      selectedProject.name.trim() !== ""
+    ) {
+      console.log("Using project name from Redux (object.name):", selectedProject.name);
+      return selectedProject.name.trim();
+    }
+    
+    // Handle object with title property (matching backend ProjectEntity.projectTitle)
+    if (
+      typeof selectedProject === "object" && 
+      selectedProject !== null &&
+      selectedProject.title && 
+      typeof selectedProject.title === "string" && 
+      selectedProject.title.trim() !== ""
+    ) {
+      console.log("Using project title from Redux (object.title):", selectedProject.title);
+      return selectedProject.title.trim();
+    }
+    
+    // Handle object with projectTitle property (exact match to backend field)
+    if (
+      typeof selectedProject === "object" && 
+      selectedProject !== null &&
+      selectedProject.projectTitle && 
+      typeof selectedProject.projectTitle === "string" && 
+      selectedProject.projectTitle.trim() !== ""
+    ) {
+      console.log("Using projectTitle from Redux:", selectedProject.projectTitle);
+      return selectedProject.projectTitle.trim();
+    }
+    
+    // Fallback with warning
+    console.warn("No valid project name found, using 'default'. This may cause backend errors if no project with this title exists.");
     return "default";
-  }, [project]);
+  }, [selectedProject]);
 
-  /* scroll to bottom */
+  // Immediately detect first-time users when component mounts
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    // If no chatId, this is a new user, so skip the first load spinner
+    if (!chatId) {
+      console.log("No chatId - first time user detected");
+      setIsFirstLoad(false);
+    }
+  }, [chatId]);
 
-  /* reset */
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
+        const response = await axios.get(`${baseURL}/userName`, {
+          withCredentials: true,
+        });
+        
+        let name = "";
+        
+        // Handle different response formats
+        if (typeof response.data === "string") {
+          name = response.data.trim();
+        } else if (typeof response.data === "object" && response.data !== null) {
+          if ("username" in response.data) {
+            name = response.data.username;
+          } else if ("name" in response.data) {
+            name = response.data.name;
+          } else {
+            // Try to get the first value in the object
+            const firstValue = Object.values(response.data)[0];
+            if (typeof firstValue === "string") {
+              name = firstValue;
+            } else {
+              throw new Error("Invalid data format");
+            }
+          }
+        } else {
+          throw new Error("Invalid data format");
+        }
+        
+        // Extract just the first letter and capitalize it
+        if (name && name.length > 0) {
+          setUserInitial(name.charAt(0).toUpperCase());
+        } else {
+          setUserInitial("U"); // Fallback if name is empty
+        }
+        
+      } catch (error) {
+        console.error("Error fetching user name:", error);
+        setUserInitial("U"); // Fallback if error occurs
+      }
+    };
+  
+    fetchUserName();
+  }, []);
+
+  // Reset messages when resetFlag changes (triggered by the new chat action)
   useEffect(() => {
     setMessages([]);
     dispatch(clearHistory());
   }, [resetFlag, dispatch]);
 
-  /* ask AI */
-  const askAI = async (q: string) => {
-    setLoading(true);
-    const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
-    const endpoint = language === "arabic" ? "/rag-arabic" : "/rag";
+  // Enhanced debugging of state changes
+  useEffect(() => {
+    console.log("Current state:", {
+      chatId,
+      isFirstLoad,
+      historyLoading,
+      chatHistory: chatHistory?.length || 0,
+      messages: messages?.length || 0,
+      conversationMessages: conversationMessages?.length || 0,
+      hasFetchedHistory,
+      currentLanguage: language,
+    });
+  }, [chatId, isFirstLoad, historyLoading, chatHistory, messages, conversationMessages, hasFetchedHistory, language]);
+
+  // Load chat history when chatId changes or when history is loaded
+  useEffect(() => {
+    // For first time users (no chatId), immediately set isFirstLoad to false
+    if (!chatId) {
+      setIsFirstLoad(false);
+      return;
+    }
+    
+    // If history has been fetched and chatHistory is empty or null, stop further fetches
+    if (chatId && hasFetchedHistory && (!chatHistory || chatHistory.length === 0)) {
+      console.log("History fetched, but no records exist.");
+      setIsFirstLoad(false);
+      return;
+    }
+    
+    // If we have a chat ID but chatHistory is empty and not loading, fetch chat history
+    if (chatId && (!chatHistory || chatHistory.length === 0) && !historyLoading) {
+      console.log(`Fetching chat history for chatId ${chatId}`);
+      dispatch(fetchChatHistory({ 
+        chatId: chatId, 
+        projectName: getProjectName() 
+      }));
+    } else if (conversationMessages && conversationMessages.length > 0) {
+      console.log(`Setting ${conversationMessages.length} messages from conversation`);
+      setMessages(conversationMessages);
+      setIsFirstLoad(false); // History loaded, not first load anymore
+    }
+    
+    // Final safeguard: if history loading completes, update firstLoad state
+    if (!historyLoading && isFirstLoad) {
+      setIsFirstLoad(false);
+    }
+  }, [
+    chatId, 
+    chatHistory, 
+    conversationMessages, 
+    historyLoading, 
+    hasFetchedHistory,
+    dispatch, 
+    getProjectName, 
+    isFirstLoad
+  ]);
+
+  // Clean up history data when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearHistory());
+    };
+  }, [dispatch]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const fetchAIResponse = async (query) => {
+    setIsLoading(true);
     try {
-      const res = await axios.get(`${base}${endpoint}`, {
-        params: { query: q, chatId, projectName: projectName() },
+      const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
+      // Get project name using the robust method
+      const projectName = getProjectName();
+      
+      // Use language-specific endpoint
+      const endpoint = language === "arabic" ? "/rag-arabic" : "/rag";
+      
+      console.log(`Sending request to ${endpoint}: query=${query}, chatId=${chatId}, projectName=${projectName}, language=${language}`);
+      
+      const response = await axios.get(`${baseURL}${endpoint}`, {
+        params: {
+          query,
+          chatId,
+          projectName
+        },
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
-      return res.data;
-    } catch {
-      return "Sorry, I couldn't process your request.";
+
+      console.log(`Received response from ${endpoint}:`, response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching ${language} RAG response:`, error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error(`Server responded with ${error.response.status}: ${JSON.stringify(error.response.data)}`);
+        return `Error: ${error.response.status} - Please try again or check your input.`;
+      }
+      return "Sorry, I couldn't process your request. Please try again.";
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  /* submit */
-  const submit = async (e: FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
-    setMessages((m) => [...m, { text: input, sender: "user" }]);
-    setInput("");
-    const ai = await askAI(input);
-    setMessages((m) => [...m, { text: ai, sender: "ai" }]);
+    if (inputValue.trim() && !isLoading) {
+      const userMessage = { text: inputValue, sender: "user" };
+      setMessages((prev) => [...prev, userMessage]);
+      setInputValue("");
+
+      try {
+        // Log current language before making request
+        console.log(`Submitting with current language: ${language}`);
+        
+        const aiResponse = await fetchAIResponse(inputValue);
+        const aiMessage = { text: aiResponse || "No response received", sender: "ai" };
+        setMessages((prev) => [...prev, aiMessage]);
+      } catch (error) {
+        console.error("Error handling submission:", error);
+        const errorMessage = { text: "An error occurred while processing your request.", sender: "ai" };
+        setMessages((prev) => [...prev, errorMessage]);
+      }
+    }
+  };
+  
+  // Email handling functions
+  const handleEmailClick = (messageContent) => {
+    setSelectedMessageContent(messageContent);
+    setEmailModalOpen(true);
   };
 
-  /* open email modal */
-  const openEmail = (txt: string) => {
-    setEmailText(txt);
-    setEmailOpen(true);
-  };
-
-  /* loading history */
-  if (historyLoading && chatId)
+  // Simplified loading condition - only show for returning users with a chatId
+  if (historyLoading && chatId) {
     return (
-      <div
-        className="flex flex-col items-center justify-center h-[calc(100vh-140px)]"
-        style={{ background: colorTheme.primarySoft }}
+      <div 
+        className="flex flex-col items-center justify-center h-full"
+        style={{ backgroundColor: colors.bg.main }}
       >
-        <div
+        <div 
           className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin"
-          style={{ borderColor: colorTheme.primary }}
-        />
-        <p className="mt-4 text-sm" style={{ color: colorTheme.gray500 }}>
-          Loading chat history…
+          style={{ 
+            borderColor: colorTheme.primaryLighter,
+            borderTopColor: colorTheme.primary
+          }}
+        ></div>
+        <p className="mt-4 text-sm" style={{ color: colors.text.secondary }}>
+          Loading chat history...
         </p>
       </div>
     );
+  }
 
   return (
-    /* `group` needed for right‑sidebar hover states */
-    <div
-      className="flex flex-col h-[calc(100vh-140px)] group"
-      style={{ background: colorTheme.primarySoft }}
+    <div 
+      className="flex flex-col h-full relative"
+      style={{ 
+        backgroundColor: colors.bg.main 
+      }}
     >
-      {/* scroll‑area */}
-      <div
-        className={`relative flex-1 overflow-y-auto px-4 transition-[padding] duration-300 ${
-          messages.length ? "pt-4" : ""
-        } pr-[320px] group-hover:pr-4`}
+      {/* Welcome section for empty chat */}
+      {messages.length === 0 && <WelcomeUser />}
+      
+      {/* Messages container - Fixed height calculation */}
+      <div 
+        className="flex-1 overflow-y-auto pb-24"
+        style={{ 
+          minHeight: messages.length === 0 ? '0' : 'auto'
+        }}
       >
-        {/* empty‑state overlay */}
-        {messages.length === 0 && (
-          <div className="absolute inset-0 grid place-items-center text-center px-6">
-            <div>
-              <div
-                className="w-12 h-12 rounded-full mx-auto flex items-center justify-center"
-                style={{ background: colorTheme.primaryLighter }}
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full px-4">
+            <div className="text-center">
+              <div 
+                className="flex items-center justify-center w-16 h-16 rounded-full mx-auto mb-8"
+                style={{ backgroundColor: colorTheme.primarySoft }}
               >
-                💡
+                <span className="text-2xl">💡</span>
               </div>
-              <h3
-                className="mt-6 text-lg font-medium"
-                style={{ color: colorTheme.primaryDark }}
-              >
-                Hi, how can I help you today?
-              </h3>
-              <p
-                className="text-sm mt-1 max-w-sm mx-auto"
-                style={{ color: colorTheme.gray500 }}
-              >
-                Feel free to ask any questions about your project!
-              </p>
+              <div className="space-y-4">
+                <h3 
+                  className="text-2xl font-semibold"
+                  style={{ color: colors.text.primary }}
+                >
+                  Hi, how can I help you today?
+                </h3>
+                <p 
+                  className="text-base max-w-md mx-auto"
+                  style={{ color: colors.text.secondary }}
+                >
+                  Feel free to ask any questions about your project!
+                </p>
+              </div>
             </div>
           </div>
-        )}
-
-        {/* chat history */}
-        {messages.length > 0 && (
-          <div className="space-y-6 pb-20">
-            {messages.map((m, i) => (
+        ) : (
+          <div className="space-y-6 px-4 py-6">
+            {messages.map((message, index) => (
               <div
-                key={i}
-                className={`flex gap-3 mt-8 ${
-                  m.sender === "user" ? "justify-end" : "justify-start -ml-6"
+                key={index}
+                className={`flex items-start gap-3 ${
+                  message.sender === "user"
+                    ? "justify-end"
+                    : "justify-start"
                 }`}
               >
-                {m.sender === "ai" && (
-                  <div
+                {message.sender === "ai" && (
+                  <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{
-                      background: colorTheme.primaryLighter,
-                      color: colorTheme.primaryDark,
+                    style={{ 
+                      backgroundColor: colorTheme.primarySoft,
+                      color: colorTheme.primary 
                     }}
                   >
-                    AI
+                    <span className="text-sm font-medium">AI</span>
                   </div>
                 )}
-
-                {/* bubble */}
                 <div
-                  className={`relative px-6 py-3.5 rounded-2xl max-w-[95%] whitespace-pre-wrap break-words group ${
-                    m.sender === "user"
+                  className={`px-6 py-4 rounded-2xl ${
+                    message.sender === "user"
                       ? "rounded-tr-none"
-                      : "rounded-tl-none text-white"
-                  }`}
-                  style={{
-                    background:
-                      m.sender === "user"
-                        ? colorTheme.primaryLighter
-                        : colorTheme.primary,
-                    color:
-                      m.sender === "user"
-                        ? colorTheme.primaryDarker
-                        : colorTheme.white,
+                      : "rounded-tl-none"
+                  } max-w-[75%] whitespace-pre-wrap break-words relative group`}
+                  style={{ 
+                    backgroundColor: colorTheme.primary,
+                    color: colorTheme.white
                   }}
-                  onMouseEnter={() => m.sender === "ai" && setHoverIdx(i)}
-                  onMouseLeave={() => setHoverIdx(null)}
+                  onMouseEnter={() => message.sender === "ai" && setHoveredMessageIndex(index)}
+                  onMouseLeave={() => setHoveredMessageIndex(null)}
                 >
-                  {m.sender === "ai" && i === messages.length - 1 && !chatId ? (
-                    <Typewriter text={m.text} speed={20} />
+                  {message.sender === "ai" && index === messages.length - 1 && !chatId ? (
+                    <Typewriter text={message.text} speed={20} />
                   ) : (
-                    m.text
+                    message.text
                   )}
-
-                  {m.sender === "ai" && hoverIdx === i && (
+                  
+                  {/* Email button that shows on hover for AI messages */}
+                  {message.sender === "ai" && hoveredMessageIndex === index && (
                     <button
-                      className="absolute top-2 right-2 p-1 rounded-full"
-                      style={{ background: "rgba(255,255,255,0.25)" }}
-                      onClick={() => openEmail(m.text)}
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-opacity-20 hover:bg-opacity-30 transition-opacity"
+                      style={{ 
+                        backgroundColor: colorTheme.white
+                      }}
+                      onClick={() => handleEmailClick(message.text)}
+                      title="Send as email"
                     >
-                      <Mail size={16} color="#FFFFFF" />
+                      <Mail size={16} style={{ color: colorTheme.white }} />
                     </button>
                   )}
                 </div>
-
-                {m.sender === "user" && (
-                  <div
+                {message.sender === "user" && (
+                  <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{
-                      background: colorTheme.primaryLighter,
-                      color: colorTheme.primaryDarker,
+                    style={{ 
+                      backgroundColor: colors.bg.tertiary,
+                      color: colors.text.primary
                     }}
                   >
-                    U
+                    <span className="text-sm font-medium">{userInitial || "U"}</span>
                   </div>
                 )}
               </div>
@@ -382,48 +662,65 @@ const Chatbox = () => {
           </div>
         )}
       </div>
-
-      {/* input bar (slides left when sidebar shows) */}
-      <div
-        className="fixed bottom-0 left-64 right-0 border-t p-4 transition-[right] duration-300 group-hover:right-[320px]"
-        style={{
-          background: colorTheme.primarySoft,
-          borderColor: colorTheme.gray200,
+      
+      {/* Fixed input form at bottom - Updated to be responsive */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 border-t p-4 bg-opacity-95 backdrop-blur-sm"
+        style={{ 
+          backgroundColor: colors.bg.main,
+          borderColor: colors.border,
+          zIndex: 10
         }}
       >
-        <form onSubmit={submit} className="max-w-4xl mx-auto flex gap-2">
-          <input
-            className="flex-1 px-4 py-2.5 rounded-full border focus:outline-none"
-            style={{
-              background: colorTheme.white,
-              borderColor: colorTheme.gray200,
-              color: colorTheme.primaryDarker,
-            }}
-            placeholder={
-              language === "arabic" ? "اسألني أي شيء..." : "Ask me anything..."
-            }
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-          <button
-            disabled={loading}
-            className="p-2.5 rounded-full text-white"
-            style={{ background: colorTheme.primary }}
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
-          </button>
-        </form>
+        <div className="max-w-4xl mx-auto">
+          <form onSubmit={handleSubmit}>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={language === "arabic" ? "اسألني أي شيء..." : "Ask me anything..."}
+                className="flex-1 px-4 py-3 border rounded-full focus:outline-none focus:ring-2 transition-all text-base"
+                style={{ 
+                  backgroundColor: colors.input.bg,
+                  borderColor: colors.input.border,
+                  color: colors.text.primary,
+                  '--tw-ring-color': colorTheme.primary
+                }}
+              />
+              <button
+                type="submit"
+                className="p-3 rounded-full flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0"
+                style={{ 
+                  backgroundColor: colorTheme.primary,
+                  color: colorTheme.white
+                }}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div 
+                    className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+                    style={{ 
+                      borderColor: colorTheme.white,
+                      borderTopColor: 'transparent'
+                    }}
+                  ></div>
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-
-      {/* email modal */}
-      {emailOpen && (
-        <EmailModal
-          messageContent={emailText}
-          onClose={() => setEmailOpen(false)}
+      
+      {/* Email Modal */}
+      {emailModalOpen && (
+        <EmailModal 
+          messageContent={selectedMessageContent}
+          onClose={() => setEmailModalOpen(false)}
+          colors={colors}
+          isDarkMode={isDarkMode}
         />
       )}
     </div>

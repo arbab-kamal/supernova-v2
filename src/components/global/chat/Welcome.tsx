@@ -10,7 +10,7 @@ const colorTheme = {
   primary: "#5CAB7D",
   primaryLight: "#7DCCA0",
   primaryLighter: "#A8E6C3",
-  primarySoft: "#ECF9F2",
+  primarySoft: "#FFFFFF",
   primaryDark: "#3D8C5F",
   primaryDarker: "#2A6A45",
   white: "#FFFFFF",

@@ -75,7 +75,7 @@ const AuthPage = () => {
       console.log('User login successful:', response.data);
       
       setTimeout(() => {
-        router.push('/project');
+        router.push('/workspace');
       }, 1500);
       
     } catch (error) {

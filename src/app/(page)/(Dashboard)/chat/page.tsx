@@ -1,60 +1,32 @@
-"use client";
 import React from "react";
 import ArticleNavbar from "@/components/global/navbar";
 import RightSidebar from "@/components/global/sidebar/rightside";
 import Chatbox from "@/components/global/chat";
 
-/* shared palette */
-const colorTheme = {
-    primarySoft: "#ECF9F2",
-    gray200: "#E5E7EB",
-};
-
 const Chat = () => {
-    return (
-        /* `group` lets children react to sidebar hover */
-        <div className="flex group">
-            {/* left drawer width presumed 64 px */}
-            <div className="flex-1 ml-64">
-                {/* ── Navbar ───────────────────────────────────────────── */}
-                <div
-                    className="fixed top-0 left-64 right-0 border-b z-10"
-                    style={{
-                        backgroundColor: colorTheme.primarySoft,
-                        borderColor: colorTheme.gray200,
-                    }}
-                >
-                    <ArticleNavbar />
-                </div>
-
-                {/* ── Chat Area ────────────────────────────────────────── */}
-                <div
-                    /* Keep consistent padding - always reserve space for sidebar */
-                    className="h-screen pt-14 pr-[320px]"
-                    style={{ backgroundColor: colorTheme.primarySoft }}
-                >
-                    <Chatbox />
-                </div>
-
-                {/* ── Right Sidebar (slides on hover) ─────────────────── */}
-                <div className="fixed top-14 right-0 bottom-0 z-20 group">
-                    {/* 8 px handle that triggers the hover */}
-                    <div className="absolute inset-y-0 right-0 w-2 cursor-pointer group-hover:w-[320px]" />
-
-                    {/* panel - Added overflow-hidden and h-full */}
-                    <div
-                        className="absolute inset-y-0 right-0 w-[320px] h-full border-l transform translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out overflow-hidden"
-                        style={{
-                            backgroundColor: colorTheme.primarySoft,
-                            borderColor: colorTheme.gray200,
-                        }}
-                    >
-                        <RightSidebar />
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="flex h-screen">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col ">
+        {/* Fixed Navbar */}
+        <div className="w-full top-0 left-64 right-80 bg-#ECF9F2 border-b border-gray-200 z-20">
+          <ArticleNavbar />
         </div>
-    );
+
+        {/* Chat Area */}
+        <div className="flex-1 pt-14">
+          <Chatbox />
+        </div>
+      </div>
+
+      {/* Fixed Right Sidebar */}
+      {/* <div className="fixed top-0 right-0 bottom-0 w-80 border-l border-gray-200 bg-white z-10">
+        <div className="pt-14 h-full">
+          <RightSidebar />
+        </div>
+      </div> */}
+    </div>
+  );
 };
 
 export default Chat;
